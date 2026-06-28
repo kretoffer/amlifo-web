@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-bg: #f8f5f0;
+  --color-bg-card: #ffffff;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+}
+
+.dark {
+  --color-bg: #0f0f1a;
+  --color-bg-card: #1a1a2e;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-border: #2d2d4a;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.fretboard-bg {
+  background-color: #d4a574;
+}
