@@ -1,15 +1,29 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 import { MetronomeIcon, NoteIcon, ExerciseIcon } from '@/components/Icons'
 
-const CARDS = [
-  { to: '/metronome', title: 'Метроном', desc: 'Тренируй чувство ритма с регулировкой BPM и визуальным индикатором', icon: <MetronomeIcon/> },
-  { to: '/tuner', title: 'Тюнер', desc: 'Настрой гитару через микрофон — точное определение ноты и центы', icon: <NoteIcon/> },
-  { to: '/train', title: 'Тренировка', desc: 'Угадай и сыграй аккорд', icon: <ExerciseIcon/> },
-]
-
 export function HomePage() {
+  const { t } = useTranslation()
+
+  const CARDS = [
+    { to: '/metronome', title: t('home.metronomeTitle'), desc: t('home.metronomeDesc'), icon: <MetronomeIcon/> },
+    { to: '/tuner', title: t('home.tunerTitle'), desc: t('home.tunerDesc'), icon: <NoteIcon/> },
+    { to: '/train', title: t('home.trainTitle'), desc: t('home.trainDesc'), icon: <ExerciseIcon/> },
+  ]
+
   return (
     <div className="space-y-6">
+      <Helmet>
+        <title>{t('meta.homeTitle')}</title>
+        <meta name="description" content={t('meta.homeDesc')} />
+        <meta property="og:title" content={t('meta.homeTitle')} />
+        <meta property="og:description" content={t('meta.homeDesc')} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://amlifo.web.app" />
+        <meta property="og:image" content="https://amlifo.web.app/favicon.svg" />
+      </Helmet>
+
       <div className="flex justify-center items-center">
         <img src='/favicon.svg' width={80} className="relative" style={{ left: -32 }} />
         <div className="text-center space-y-2">
@@ -17,7 +31,7 @@ export function HomePage() {
             Amlifo
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            Твой персональный помощник для игры на гитаре
+            {t('home.subtitle')}
           </p>
         </div>
       </div>

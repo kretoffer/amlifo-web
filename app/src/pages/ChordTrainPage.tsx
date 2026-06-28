@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 import { ChordDiagram } from '@/components/ChordDiagram.tsx'
 import { CHORD_LIBRARY } from '@/data/chords.ts'
 import { useAppStore } from '@/store/index.ts'
@@ -6,6 +8,7 @@ import { AudioEngine, StringAnalyzer } from '@kretoffer/guitar-audio-kit'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
 
 export function ChordTrainPage() {
+  const { t } = useTranslation()
   const selectedChords = useAppStore(s => s.selectedChords)
   const toggleChord = useAppStore(s => s.toggleChord)
   const score = useAppStore(s => s.score)
@@ -97,7 +100,7 @@ export function ChordTrainPage() {
 
           if (correctCount.current >= 8) {
             onCooldown.current = true
-            setFeedback('✓ Правильно!')
+            setFeedback(t('train.correct'))
             incrementScore()
             playCorrectChord()
 
@@ -139,20 +142,29 @@ export function ChordTrainPage() {
   if (showSetup) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-center">Тренировка</h1>
+        <Helmet>
+          <title>{t('meta.trainTitle')}</title>
+          <meta name="description" content={t('meta.trainDesc')} />
+          <meta property="og:title" content={t('meta.trainTitle')} />
+          <meta property="og:description" content={t('meta.trainDesc')} />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://amlifo.web.app/train" />
+        </Helmet>
+
+        <h1 className="text-2xl font-bold text-center">{t('train.title')}</h1>
         <div className="space-y-4 text-center">
           <div className="flex items-center justify-center gap-2">
             <button onClick={() => setMode('diagram')}
               className={`rounded-lg px-4 py-2 ${mode === 'diagram' ? 'bg-blue-500 text-white' : ''}`}
               style={{ backgroundColor: mode === 'diagram' ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-            >По диаграмме</button>
+            >{t('train.byDiagram')}</button>
             <button onClick={() => setMode('name')}
               className={`rounded-lg px-4 py-2 ${mode === 'name' ? 'bg-blue-500 text-white' : ''}`}
               style={{ backgroundColor: mode === 'name' ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-            >По названию</button>
+            >{t('train.byName')}</button>
           </div>
           <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-            <h3 className="text-sm font-semibold mb-2">Выбери аккорды:</h3>
+            <h3 className="text-sm font-semibold mb-2">{t('train.selectChords')}</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {Object.keys(CHORD_LIBRARY).map(k => (
                 <button key={k} onClick={() => toggleChord(k)}
@@ -164,7 +176,7 @@ export function ChordTrainPage() {
           </div>
           <button onClick={async () => { await warmUpAudio(); startTraining() }} disabled={selectedChords.length === 0}
             className="rounded-full bg-green-500 px-8 py-3 text-lg font-bold text-white disabled:opacity-50"
-          >Старт</button>
+          >{t('train.start')}</button>
         </div>
       </div>
     )
@@ -173,23 +185,33 @@ export function ChordTrainPage() {
   if (timeLeft <= 0) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="text-2xl font-bold">Тренировка</h1>
-        <div className="text-2xl font-bold">Время вышло!</div>
-        <div className="text-lg">Счёт: {score} / {totalRounds}</div>
+        <Helmet>
+          <title>{t('meta.trainTitle')}</title>
+          <meta name="description" content={t('meta.trainDesc')} />
+        </Helmet>
+
+        <h1 className="text-2xl font-bold">{t('train.title')}</h1>
+        <div className="text-2xl font-bold">{t('train.timeUp')}</div>
+        <div className="text-lg">{t('train.score')} {score} / {totalRounds}</div>
         <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          Точность: {totalRounds > 0 ? Math.round(score / totalRounds * 100) : 0}%
+          {t('train.accuracy')} {totalRounds > 0 ? Math.round(score / totalRounds * 100) : 0}%
         </div>
-        <button onClick={() => setShowSetup(true)} className="rounded-full bg-blue-500 px-8 py-3 text-lg font-bold text-white">Настройки</button>
+        <button onClick={() => setShowSetup(true)} className="rounded-full bg-blue-500 px-8 py-3 text-lg font-bold text-white">{t('train.settings')}</button>
       </div>
     )
   }
 
   return (
     <div className="space-y-4 text-center">
+      <Helmet>
+        <title>{t('meta.trainTitle')}</title>
+        <meta name="description" content={t('meta.trainDesc')} />
+      </Helmet>
+
       <div className="flex items-center justify-between">
-        <div className="text-lg font-bold">⏱ {timeLeft}с</div>
+        <div className="text-lg font-bold">⏱ {timeLeft}{t('metronome.seconds')}</div>
         <div className="text-lg font-bold">🎯 {score}/{totalRounds}</div>
-        <button onClick={stopTraining} className="text-sm text-red-400">Стоп</button>
+        <button onClick={stopTraining} className="text-sm text-red-400">{t('train.stop')}</button>
       </div>
 
       {mode === 'diagram'
@@ -198,7 +220,7 @@ export function ChordTrainPage() {
       }
 
       <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-        {feedback || 'Сыграй аккорд'}
+        {feedback || t('train.playChord')}
       </div>
     </div>
   )

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 import { AudioEngine, Tuner, PitchDetector, noteToFrequency } from '@kretoffer/guitar-audio-kit'
 import type { TuningResult } from '@kretoffer/guitar-audio-kit'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
@@ -29,6 +31,7 @@ function findClosestString(freq: number): number | null {
 }
 
 export function TunerPage() {
+  const { t, i18n } = useTranslation()
   const [active, setActive] = useState(false)
   const [autoDetect, setAutoDetect] = useState(true)
   const [result, setResult] = useState<TuningResult | null>(null)
@@ -106,19 +109,33 @@ export function TunerPage() {
 
   return (
     <div className="space-y-6 text-center">
-      <h1 className="text-2xl font-bold">Тюнер</h1>
+      <Helmet>
+        <title>{t('meta.tunerTitle')}</title>
+        <meta name="description" content={t('meta.tunerDesc')} />
+        <meta property="og:title" content={t('meta.tunerTitle')} />
+        <meta property="og:description" content={t('meta.tunerDesc')} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://amlifo.web.app/tuner" />
+      </Helmet>
+
+      <h1 className="text-2xl font-bold">{t('tuner.title')}</h1>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
         {GUITAR_STRINGS.map((s, i) => (
           <button key={i} onClick={() => { setSelectedString(i); setAutoDetect(false) }}
             className={`rounded-lg px-3 py-1 text-sm ${selectedString === i ? 'bg-blue-500 text-white' : ''}`}
             style={{ backgroundColor: selectedString === i ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-          >{s.label}</button>
+          >
+            {i18n.language === 'en'
+              ? `${s.note}${s.octave} (${s.note === 'B' ? '2nd' : ['6th','5th','4th','3rd','2nd','1st'][i]})`
+              : s.label
+            }
+          </button>
         ))}
       </div>
 
       <div className="flex items-center justify-center gap-3" style={{ color: 'var(--color-text-secondary)' }}>
-        <span className="text-sm">Автонастройка</span>
+        <span className="text-sm">{t('tuner.autoDetect')}</span>
         <button
           onClick={() => setAutoDetect(a => !a)}
           className={`relative h-6 w-11 rounded-full transition-colors ${autoDetect ? 'bg-blue-500' : 'bg-gray-600'}`}
@@ -129,7 +146,7 @@ export function TunerPage() {
 
       <button onClick={async () => { if (!active) await warmUpAudio(); setActive(a => !a) }}
         className={`rounded-full px-8 py-3 text-lg font-bold text-white ${active ? 'bg-red-500' : 'bg-blue-500'}`}
-      >{active ? 'Выключить' : 'Включить микрофон'}</button>
+      >{active ? t('tuner.disableMic') : t('tuner.enableMic')}</button>
 
       {active && (
         <div className="space-y-4">
@@ -150,12 +167,14 @@ export function TunerPage() {
               </div>
               {autoDetect && (
                 <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  Определена: {GUITAR_STRINGS[selectedString].label}
+                  {t('tuner.detected')} {i18n.language === 'en'
+                    ? `${GUITAR_STRINGS[selectedString].note}${GUITAR_STRINGS[selectedString].octave}`
+                    : GUITAR_STRINGS[selectedString].label}
                 </div>
               )}
             </>
           ) : (
-            <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Дёрни струну</div>
+            <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('tuner.pluckString')}</div>
           )}
         </div>
       )}

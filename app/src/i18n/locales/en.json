@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "home": "Home",
+    "metronome": "Metronome",
+    "tuner": "Tuner",
+    "train": "Training"
+  },
+  "home": {
+    "title": "Amlifo",
+    "subtitle": "Your personal guitar companion",
+    "metronomeTitle": "Metronome",
+    "metronomeDesc": "Train your rhythm with adjustable BPM and visual indicator",
+    "tunerTitle": "Tuner",
+    "tunerDesc": "Tune your guitar via microphone — precise note and cent detection",
+    "trainTitle": "Training",
+    "trainDesc": "Guess and play the chord"
+  },
+  "metronome": {
+    "title": "Metronome",
+    "bpm": "BPM",
+    "timeSig": "Time:",
+    "timer": "Timer",
+    "remaining": "Remaining:",
+    "start": "Start",
+    "stop": "Stop",
+    "seconds": "s"
+  },
+  "tuner": {
+    "title": "Tuner",
+    "autoDetect": "Auto-detect",
+    "enableMic": "Enable microphone",
+    "disableMic": "Disable",
+    "pluckString": "Pluck a string",
+    "detected": "Detected:"
+  },
+  "train": {
+    "title": "Training",
+    "byDiagram": "By diagram",
+    "byName": "By name",
+    "selectChords": "Select chords:",
+    "start": "Start",
+    "timeUp": "Time's up!",
+    "score": "Score:",
+    "accuracy": "Accuracy:",
+    "settings": "Settings",
+    "correct": "✓ Correct!",
+    "playChord": "Play the chord",
+    "stop": "Stop"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "meta": {
+    "homeTitle": "Amlifo — guitar online toolkit",
+    "homeDesc": "Metronome, tuner and chord training for guitarists. Free online tools for playing guitar.",
+    "metronomeTitle": "Online Metronome — Amlifo",
+    "metronomeDesc": "Free online metronome for guitarists. Adjustable BPM, visual indicator, timer.",
+    "tunerTitle": "Online Guitar Tuner — Amlifo",
+    "tunerDesc": "Tune your guitar via microphone. Precise note and cent detection. Free online tuner.",
+    "trainTitle": "Chord Training — Amlifo",
+    "trainDesc": "Guess and play guitar chords. Ear and technique training. Free."
+  }
+}

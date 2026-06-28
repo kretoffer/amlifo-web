@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 
 let ctx: AudioContext | null = null
 let warmed = false
@@ -44,6 +46,7 @@ async function startAudio() {
 }
 
 export function MetronomePage() {
+  const { t } = useTranslation()
   const [bpm, setBpm] = useState(120)
   const [beat, setBeat] = useState(4)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -127,7 +130,16 @@ export function MetronomePage() {
 
   return (
     <div className="space-y-6 text-center">
-      <h1 className="text-2xl font-bold">Метроном</h1>
+      <Helmet>
+        <title>{t('meta.metronomeTitle')}</title>
+        <meta name="description" content={t('meta.metronomeDesc')} />
+        <meta property="og:title" content={t('meta.metronomeTitle')} />
+        <meta property="og:description" content={t('meta.metronomeDesc')} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://amlifo.web.app/metronome" />
+      </Helmet>
+
+      <h1 className="text-2xl font-bold">{t('metronome.title')}</h1>
 
       <div className="flex items-center justify-center gap-4">
         <button
@@ -139,7 +151,7 @@ export function MetronomePage() {
         </button>
         <div className="text-center">
           <div className="text-5xl font-bold tabular-nums">{bpm}</div>
-          <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>BPM</div>
+          <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('metronome.bpm')}</div>
         </div>
         <button
           onClick={() => setBpm(b => Math.min(300, b + 1))}
@@ -163,7 +175,7 @@ export function MetronomePage() {
       />
 
       <div className="flex items-center justify-center gap-2">
-        <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Размер:</span>
+        <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('metronome.timeSig')}</span>
         {[2, 3, 4, 6].map((n) => (
           <button
             key={n}
@@ -197,7 +209,7 @@ export function MetronomePage() {
           onClick={togglePlay}
           className={`rounded-full px-8 py-3 text-lg font-bold text-white ${isPlaying ? 'bg-red-500' : 'bg-blue-500'}`}
         >
-          {isPlaying ? 'Стоп' : 'Старт'}
+          {isPlaying ? t('metronome.stop') : t('metronome.start')}
         </button>
       </div>
 
@@ -209,7 +221,7 @@ export function MetronomePage() {
             onChange={() => setTimerMode(!timerMode)}
             className="w-4 h-4"
           />
-          <span className="text-sm">Таймер</span>
+          <span className="text-sm">{t('metronome.timer')}</span>
         </label>
         {timerMode && (
           <div className="mt-2 flex items-center justify-center gap-2">
@@ -221,7 +233,7 @@ export function MetronomePage() {
               −
             </button>
             <span className="text-lg font-bold tabular-nums">
-              {timerDuration >= 60 ? `${Math.floor(timerDuration / 60)}:${String(timerDuration % 60).padStart(2, '0')}` : `${timerDuration}с`}
+              {timerDuration >= 60 ? `${Math.floor(timerDuration / 60)}:${String(timerDuration % 60).padStart(2, '0')}` : `${timerDuration}${t('metronome.seconds')}`}
             </span>
             <button
               onClick={() => setTimerDuration(d => Math.min(600, d + 10))}
@@ -232,7 +244,7 @@ export function MetronomePage() {
             </button>
             {isPlaying && timerRemaining > 0 && (
               <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>
-                Осталось: {timerRemaining >= 60 ? `${Math.floor(timerRemaining / 60)}:${String(timerRemaining % 60).padStart(2, '0')}` : `${timerRemaining}с`}
+                {t('metronome.remaining')} {timerRemaining >= 60 ? `${Math.floor(timerRemaining / 60)}:${String(timerRemaining % 60).padStart(2, '0')}` : `${timerRemaining}${t('metronome.seconds')}`}
               </span>
             )}
           </div>

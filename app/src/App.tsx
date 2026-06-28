@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/components/Layout.tsx'
 import { HomePage } from '@/pages/Home.tsx'
 import { MetronomePage } from '@/pages/MetronomePage.tsx'
@@ -7,15 +7,13 @@ import { ChordTrainPage } from '@/pages/ChordTrainPage.tsx'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/metronome" element={<MetronomePage />} />
-          <Route path="/tuner" element={<TunerPage />} />
-          <Route path="/train" element={<ChordTrainPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/metronome" element={<MetronomePage />} />
+        <Route path="/tuner" element={<TunerPage />} />
+        <Route path="/train" element={<ChordTrainPage />} />
+      </Route>
+    </Routes>
   )
 }
