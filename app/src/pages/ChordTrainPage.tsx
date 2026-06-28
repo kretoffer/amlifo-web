@@ -26,6 +26,7 @@ export function ChordTrainPage() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [screen, setScreen] = useState<'setup' | 'playing' | 'results'>('setup')
   const [streak, setStreak] = useState(0)
+  const [chordKey, setChordKey] = useState(0)
   const engineRef = useRef<AudioEngine | null>(null)
   const analyzerRef = useRef<StringAnalyzer | null>(null)
   const rafId = useRef(0)
@@ -80,6 +81,7 @@ export function ChordTrainPage() {
         const name = nextChord()
         if (!name) return
         setCurrentChord(name)
+        setChordKey(k => k + 1)
         chordName.current = name
         analyzer.setTarget(CHORD_LIBRARY[name].frets)
 
@@ -121,6 +123,7 @@ export function ChordTrainPage() {
               const next = nextChord()
               if (!next) return
               setCurrentChord(next)
+              setChordKey(k => k + 1)
               chordName.current = next
               setFeedback(null)
               correctCount.current = 0
@@ -253,10 +256,12 @@ export function ChordTrainPage() {
         <button onClick={stopTraining} className="text-sm text-red-400">{t('train.stop')}</button>
       </div>
 
-      {mode === 'diagram'
-        ? currentChord && <ChordDiagram chordName={currentChord} stringStates={stringStates.length > 0 ? stringStates : undefined} />
-        : <div className="text-4xl font-bold py-8">{currentChord}</div>
-      }
+      <div key={chordKey} className="animate-chord-pop">
+        {mode === 'diagram'
+          ? currentChord && <ChordDiagram chordName={currentChord} stringStates={stringStates.length > 0 ? stringStates : undefined} />
+          : <div className="text-4xl font-bold py-8">{currentChord}</div>
+        }
+      </div>
 
       <div className="flex items-center justify-center gap-2">
         {Array.from({ length: 5 }).map((_, i) => (
