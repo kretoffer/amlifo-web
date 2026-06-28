@@ -14,8 +14,11 @@ interface AppState {
   clearChords: () => void
   score: number
   totalRounds: number
+  highScoreDiagram: number
+  highScoreName: number
   incrementScore: () => void
   resetScore: () => void
+  setHighScore: (score: number, mode: 'diagram' | 'name') => void
   stringStates: StringState[]
   setStringStates: (states: StringState[]) => void
 }
@@ -41,9 +44,16 @@ export const useAppStore = create<AppState>()(
       clearChords: () => set({ selectedChords: [] }),
       score: 0,
       totalRounds: 0,
+      highScoreDiagram: 0,
+      highScoreName: 0,
       incrementScore: () =>
         set((s) => ({ score: s.score + 1, totalRounds: s.totalRounds + 1 })),
       resetScore: () => set({ score: 0, totalRounds: 0 }),
+      setHighScore: (score, mode) =>
+        set((s) => ({
+          highScoreDiagram: mode === 'diagram' ? Math.max(score, s.highScoreDiagram) : s.highScoreDiagram,
+          highScoreName: mode === 'name' ? Math.max(score, s.highScoreName) : s.highScoreName,
+        })),
       stringStates: [],
       setStringStates: (states) => set({ stringStates: states }),
     }),

@@ -45,7 +45,9 @@
     "settings": "Settings",
     "correct": "✓ Correct!",
     "playChord": "Play the chord",
-    "stop": "Stop"
+    "stop": "Stop",
+    "playAgain": "Play Again",
+    "highScore": "Best:"
   },
   "theme": {
     "light": "Light",

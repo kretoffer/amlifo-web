@@ -45,7 +45,9 @@
     "settings": "Настройки",
     "correct": "✓ Правильно!",
     "playChord": "Сыграй аккорд",
-    "stop": "Стоп"
+    "stop": "Стоп",
+    "playAgain": "Сыграть ещё",
+    "highScore": "Рекорд:"
   },
   "theme": {
     "light": "Светлая",

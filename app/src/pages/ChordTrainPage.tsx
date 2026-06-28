@@ -12,17 +12,20 @@ export function ChordTrainPage() {
   const selectedChords = useAppStore(s => s.selectedChords)
   const toggleChord = useAppStore(s => s.toggleChord)
   const score = useAppStore(s => s.score)
-  const totalRounds = useAppStore(s => s.totalRounds)
+  const highScoreDiagram = useAppStore(s => s.highScoreDiagram)
+  const highScoreName = useAppStore(s => s.highScoreName)
   const incrementScore = useAppStore(s => s.incrementScore)
   const resetScore = useAppStore(s => s.resetScore)
+  const setHighScore = useAppStore(s => s.setHighScore)
   const stringStates = useAppStore(s => s.stringStates)
   const setStringStates = useAppStore(s => s.setStringStates)
   const [mode, setMode] = useState<'diagram' | 'name'>('diagram')
   const [currentChord, setCurrentChord] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(40)
   const [feedback, setFeedback] = useState<string | null>(null)
-  const [showSetup, setShowSetup] = useState(true)
+  const [screen, setScreen] = useState<'setup' | 'playing' | 'results'>('setup')
+  const [streak, setStreak] = useState(0)
   const engineRef = useRef<AudioEngine | null>(null)
   const analyzerRef = useRef<StringAnalyzer | null>(null)
   const rafId = useRef(0)
@@ -30,6 +33,7 @@ export function ChordTrainPage() {
   const chordName = useRef<string | null>(null)
   const correctCount = useRef(0)
   const onCooldown = useRef(false)
+  const streakRef = useRef(0)
   const { playCorrectChord } = useAudioFeedback()
 
   function nextChord(): string | null {
@@ -46,14 +50,16 @@ export function ChordTrainPage() {
     setCurrentChord(null)
     chordName.current = null
     setIsPlaying(false)
-    setShowSetup(true)
     setFeedback(null)
+    setScreen('setup')
   }, [setStringStates])
 
   function startTraining() {
     resetScore()
-    setTimeLeft(30)
-    setShowSetup(false)
+    setTimeLeft(40)
+    setStreak(0)
+    streakRef.current = 0
+    setScreen('playing')
     setIsPlaying(true)
     setFeedback(null)
     correctCount.current = 0
@@ -104,6 +110,13 @@ export function ChordTrainPage() {
             incrementScore()
             playCorrectChord()
 
+            streakRef.current++
+            if (streakRef.current >= 5) {
+              setTimeLeft(t => t + 5)
+              streakRef.current = 0
+            }
+            setStreak(streakRef.current)
+
             setTimeout(() => {
               const next = nextChord()
               if (!next) return
@@ -132,14 +145,27 @@ export function ChordTrainPage() {
 
   useEffect(() => {
     if (!isPlaying || timeLeft <= 0) {
-      if (timeLeft <= 0) stopTraining()
+      if (timeLeft <= 0) {
+        cancelAnimationFrame(rafId.current)
+        engineRef.current?.destroy()
+        engineRef.current = null
+        analyzerRef.current = null
+        setStringStates([])
+        setCurrentChord(null)
+        chordName.current = null
+        setIsPlaying(false)
+        setFeedback(null)
+        setScreen('results')
+        const { score: finalScore } = useAppStore.getState()
+        setHighScore(finalScore, mode)
+      }
       return
     }
     const t = setTimeout(() => setTimeLeft(n => n - 1), 1000)
     return () => clearTimeout(t)
-  }, [isPlaying, timeLeft, stopTraining])
+  }, [isPlaying, timeLeft, setStringStates, setHighScore])
 
-  if (showSetup) {
+  if (screen === 'setup') {
     return (
       <div className="space-y-6">
         <Helmet>
@@ -163,6 +189,9 @@ export function ChordTrainPage() {
               style={{ backgroundColor: mode === 'name' ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
             >{t('train.byName')}</button>
           </div>
+          <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            {t('train.highScore')} {t('train.byDiagram')}: {highScoreDiagram} &middot; {t('train.byName')}: {highScoreName}
+          </div>
           <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
             <h3 className="text-sm font-semibold mb-2">{t('train.selectChords')}</h3>
             <div className="flex flex-wrap justify-center gap-2">
@@ -182,7 +211,7 @@ export function ChordTrainPage() {
     )
   }
 
-  if (timeLeft <= 0) {
+  if (screen === 'results') {
     return (
       <div className="space-y-6 text-center">
         <Helmet>
@@ -192,11 +221,18 @@ export function ChordTrainPage() {
 
         <h1 className="text-2xl font-bold">{t('train.title')}</h1>
         <div className="text-2xl font-bold">{t('train.timeUp')}</div>
-        <div className="text-lg">{t('train.score')} {score} / {totalRounds}</div>
-        <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          {t('train.accuracy')} {totalRounds > 0 ? Math.round(score / totalRounds * 100) : 0}%
+        <div className="text-lg">{t('train.score')} {score}</div>
+        <div className="text-md font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+          {t('train.highScore')} {mode === 'diagram' ? highScoreDiagram : highScoreName}
         </div>
-        <button onClick={() => setShowSetup(true)} className="rounded-full bg-blue-500 px-8 py-3 text-lg font-bold text-white">{t('train.settings')}</button>
+        <div className="flex items-center justify-center gap-4">
+          <button onClick={startTraining}
+            className="rounded-full bg-green-500 px-8 py-3 text-lg font-bold text-white"
+          >{t('train.playAgain')}</button>
+          <button onClick={() => setScreen('setup')}
+            className="rounded-full bg-blue-500 px-8 py-3 text-lg font-bold text-white"
+          >{t('train.settings')}</button>
+        </div>
       </div>
     )
   }
@@ -209,8 +245,11 @@ export function ChordTrainPage() {
       </Helmet>
 
       <div className="flex items-center justify-between">
-        <div className="text-lg font-bold">⏱ {timeLeft}{t('metronome.seconds')}</div>
-        <div className="text-lg font-bold">🎯 {score}/{totalRounds}</div>
+        <div className="text-lg font-bold">{timeLeft}{t('metronome.seconds')}</div>
+        <div>
+          <div className="text-lg font-bold">{score}</div>
+          <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{t('train.highScore')} {mode === 'diagram' ? highScoreDiagram : highScoreName}</div>
+        </div>
         <button onClick={stopTraining} className="text-sm text-red-400">{t('train.stop')}</button>
       </div>
 
@@ -218,6 +257,19 @@ export function ChordTrainPage() {
         ? currentChord && <ChordDiagram chordName={currentChord} stringStates={stringStates.length > 0 ? stringStates : undefined} />
         : <div className="text-4xl font-bold py-8">{currentChord}</div>
       }
+
+      <div className="flex items-center justify-center gap-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="w-4 h-4 rounded-full border-2 transition-colors"
+            style={{
+              backgroundColor: i < streak ? '#22c55e' : 'transparent',
+              borderColor: i < streak ? '#22c55e' : '#6b7280',
+            }}
+          />
+        ))}
+      </div>
 
       <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
         {feedback || t('train.playChord')}
