@@ -31,7 +31,9 @@
     "enableMic": "Enable microphone",
     "disableMic": "Disable",
     "pluckString": "Pluck a string",
-    "detected": "Detected:"
+    "detected": "Detected:",
+    "chromaticOn": "Chromatic",
+    "chromaticOff": "Standard"
   },
   "train": {
     "title": "Training",

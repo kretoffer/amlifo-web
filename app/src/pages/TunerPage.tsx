@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet-async'
-import { AudioEngine, Tuner, PitchDetector, noteToFrequency, getTuning } from '@kretoffer/guitar-audio-kit'
+import { AudioEngine, Tuner, PitchDetector, noteToFrequency, frequencyToNote, getTuning } from '@kretoffer/guitar-audio-kit'
 import type { TuningResult } from '@kretoffer/guitar-audio-kit'
 import { useAppStore } from '@/store/index.ts'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
@@ -38,6 +38,7 @@ export function TunerPage() {
   const tuningName = useAppStore((s) => s.tuningName)
   const [active, setActive] = useState(false)
   const [autoDetect, setAutoDetect] = useState(true)
+  const [chromatic, setChromatic] = useState(false)
   const [result, setResult] = useState<TuningResult | null>(null)
   const [selectedString, setSelectedString] = useState(-1)
   const engineRef = useRef<AudioEngine | null>(null)
@@ -47,6 +48,7 @@ export function TunerPage() {
   const stringRef = useRef(selectedString)
   const activeRef = useRef(active)
   const autoDetectRef = useRef(autoDetect)
+  const chromaticRef = useRef(chromatic)
   const lastTunedRef = useRef(false)
   const mountedRef = useRef(true)
   const { playTuned } = useAudioFeedback()
@@ -71,6 +73,7 @@ export function TunerPage() {
   stringRef.current = selectedString
   activeRef.current = active
   autoDetectRef.current = autoDetect
+  chromaticRef.current = chromatic
 
   // auto-select middle string when tuning changes
   if (selectedString === -1 || selectedString >= strings.length) {
@@ -92,6 +95,27 @@ export function TunerPage() {
         function loop() {
           if (!mountedRef.current) return
           rafRef.current = requestAnimationFrame(loop)
+
+          if (chromaticRef.current) {
+            const rawFreq = pitchDetectorRef.current?.detect(60, 2000)
+            if (rawFreq != null) {
+              const info = frequencyToNote(rawFreq)
+              const targetFreq = 440 * Math.pow(2, (info.midi - 69) / 12)
+              setResult({
+                note: info.name,
+                octave: info.octave,
+                frequency: rawFreq,
+                cents: info.cents,
+                targetNote: info.name,
+                targetFrequency: targetFreq,
+                isInTune: Math.abs(info.cents) < 5,
+              })
+            } else {
+              setResult(null)
+            }
+            lastTunedRef.current = false
+            return
+          }
 
           const tun = tunerRef.current
           if (!tun) return
@@ -153,35 +177,55 @@ export function TunerPage() {
 
       <h1 className="text-2xl font-bold">{t('tuner.title')}</h1>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {strings.map((s, i) => (
-          <button key={i} onClick={() => { setSelectedString(i); setAutoDetect(false) }}
-            className={`rounded-lg px-3 py-1 text-sm ${selectedString === i ? 'bg-blue-500 text-white' : ''}`}
-            style={{ backgroundColor: selectedString === i ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {!chromatic && (
+        <>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {strings.map((s, i) => (
+              <button key={i} onClick={() => { setSelectedString(i); setAutoDetect(false) }}
+                className={`rounded-lg px-3 py-1 text-sm ${selectedString === i ? 'bg-blue-500 text-white' : ''}`}
+                style={{ backgroundColor: selectedString === i ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
 
-      <div className="flex items-center justify-center gap-3" style={{ color: 'var(--color-text-secondary)' }}>
-        <span className="text-sm">{t('tuner.autoDetect')}</span>
+          <div className="flex items-center justify-center gap-3" style={{ color: 'var(--color-text-secondary)' }}>
+            <span className="text-sm">{t('tuner.autoDetect')}</span>
+            <button
+              onClick={() => setAutoDetect(a => !a)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${autoDetect ? 'bg-blue-500' : 'bg-gray-600'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${autoDetect ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+        </>
+      )}
+
+      <div className="flex items-center justify-center gap-3">
         <button
-          onClick={() => setAutoDetect(a => !a)}
-          className={`relative h-6 w-11 rounded-full transition-colors ${autoDetect ? 'bg-blue-500' : 'bg-gray-600'}`}
+          onClick={() => setChromatic(c => !c)}
+          className={`rounded-full px-5 py-2 text-sm font-semibold ${
+            chromatic ? 'bg-purple-500 text-white' : ''
+          }`}
+          style={{
+            backgroundColor: chromatic ? undefined : 'var(--color-bg-card)',
+            border: '1px solid var(--color-border)',
+            color: chromatic ? undefined : 'var(--color-text)',
+          }}
         >
-          <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${autoDetect ? 'translate-x-5' : ''}`} />
+          {chromatic ? t('tuner.chromaticOn') : t('tuner.chromaticOff')}
         </button>
-      </div>
 
-      <button onClick={async () => { if (!active) await warmUpAudio(); setActive(a => !a) }}
-        className={`rounded-full px-8 py-3 text-lg font-bold text-white ${active ? 'bg-red-500' : 'bg-blue-500'}`}
-      >{active ? t('tuner.disableMic') : t('tuner.enableMic')}</button>
+        <button onClick={async () => { if (!active) await warmUpAudio(); setActive(a => !a) }}
+          className={`rounded-full px-8 py-3 text-lg font-bold text-white ${active ? 'bg-red-500' : 'bg-blue-500'}`}
+        >{active ? t('tuner.disableMic') : t('tuner.enableMic')}</button>
+      </div>
 
       {active && (
         <div className="space-y-4">
           <div className={`text-6xl font-bold ${hasSignal ? '' : 'opacity-30'}`}>
-            {hasSignal ? `${result!.note}${result!.octave}` : '—'}
+            {hasSignal ? result!.note : '—'}
           </div>
 
           {hasSignal ? (
@@ -195,7 +239,7 @@ export function TunerPage() {
                   style={{ width: `${barW}%`, marginLeft: cents > 0 ? '50%' : `${50 - barW}%` }}
                 />
               </div>
-              {autoDetect && selectedString >= 0 && selectedString < strings.length && (
+              {!chromatic && autoDetect && selectedString >= 0 && selectedString < strings.length && (
                 <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {t('tuner.detected')} {strings[selectedString].label}
                 </div>

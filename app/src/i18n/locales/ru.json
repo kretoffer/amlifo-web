@@ -31,7 +31,9 @@
     "enableMic": "Включить микрофон",
     "disableMic": "Выключить",
     "pluckString": "Дёрни струну",
-    "detected": "Определена:"
+    "detected": "Определена:",
+    "chromaticOn": "Хроматический",
+    "chromaticOff": "Стандартный"
   },
   "train": {
     "title": "Тренировка",
