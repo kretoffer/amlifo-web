@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@coderline/alphatab": "^1.8.3",
-    "@kretoffer/guitar-audio-kit": "^0.0.1",
+    "@kretoffer/guitar-audio-kit": "^0.0.2",
     "i18next": "^26.3.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

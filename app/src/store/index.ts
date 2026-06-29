@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { StringState } from '@kretoffer/guitar-audio-kit'
+import type { StringState, InstrumentName } from '@kretoffer/guitar-audio-kit'
 import { CHORD_KEYS } from '@/data/chords.ts'
 
 interface AppState {
@@ -21,6 +21,9 @@ interface AppState {
   setHighScore: (score: number, mode: 'diagram' | 'name') => void
   stringStates: StringState[]
   setStringStates: (states: StringState[]) => void
+  instrumentName: InstrumentName
+  tuningName: string
+  setInstrument: (name: InstrumentName, tuning?: string) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -56,6 +59,10 @@ export const useAppStore = create<AppState>()(
         })),
       stringStates: [],
       setStringStates: (states) => set({ stringStates: states }),
+      instrumentName: 'guitar' as InstrumentName,
+      tuningName: 'standard',
+      setInstrument: (name, tuning) =>
+        set({ instrumentName: name, tuningName: tuning ?? 'standard' }),
     }),
     { name: 'guitar-trainer-storage' }
   )

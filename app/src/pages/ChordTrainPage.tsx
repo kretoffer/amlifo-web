@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet-async'
 import { ChordDiagram } from '@/components/ChordDiagram.tsx'
 import { CHORD_LIBRARY } from '@/data/chords.ts'
 import { useAppStore } from '@/store/index.ts'
-import { AudioEngine, StringAnalyzer } from '@kretoffer/guitar-audio-kit'
+import { AudioEngine, StringAnalyzer, getTuning, getInstrument } from '@kretoffer/guitar-audio-kit'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
 
 export function ChordTrainPage() {
   const { t } = useTranslation()
+  const instrumentName = useAppStore(s => s.instrumentName)
   const selectedChords = useAppStore(s => s.selectedChords)
   const toggleChord = useAppStore(s => s.toggleChord)
   const score = useAppStore(s => s.score)
@@ -72,8 +73,12 @@ export function ChordTrainPage() {
         await engine.init()
         engineRef.current = engine
 
+        const currentTuning = getTuning(
+          useAppStore.getState().instrumentName,
+          useAppStore.getState().tuningName
+        )
         const analyzer = new StringAnalyzer(engine, {
-          tuning: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
+          tuning: currentTuning,
           silenceThreshold: 0.015,
         })
         analyzerRef.current = analyzer
@@ -166,7 +171,12 @@ export function ChordTrainPage() {
     }
     const t = setTimeout(() => setTimeLeft(n => n - 1), 1000)
     return () => clearTimeout(t)
-  }, [isPlaying, timeLeft, setStringStates, setHighScore])
+  }, [isPlaying, timeLeft, mode, setStringStates, setHighScore])
+
+  const isSixString = useMemo(
+    () => getInstrument(instrumentName).stringCount === 6,
+    [instrumentName]
+  )
 
   if (screen === 'setup') {
     return (
@@ -181,6 +191,13 @@ export function ChordTrainPage() {
         </Helmet>
 
         <h1 className="text-2xl font-bold text-center">{t('train.title')}</h1>
+
+        {!isSixString && (
+          <div className="rounded-lg px-4 py-3 text-sm text-yellow-700 bg-yellow-100 dark:text-yellow-300 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
+            {t('instrument.trainingWarning')}
+          </div>
+        )}
+
         <div className="space-y-4 text-center">
           <div className="flex items-center justify-center gap-2">
             <button onClick={() => setMode('diagram')}
@@ -206,7 +223,7 @@ export function ChordTrainPage() {
               ))}
             </div>
           </div>
-          <button onClick={async () => { await warmUpAudio(); startTraining() }} disabled={selectedChords.length === 0}
+          <button onClick={async () => { await warmUpAudio(); startTraining() }} disabled={selectedChords.length === 0 || !isSixString}
             className="rounded-full bg-green-500 px-8 py-3 text-lg font-bold text-white disabled:opacity-50"
           >{t('train.start')}</button>
         </div>

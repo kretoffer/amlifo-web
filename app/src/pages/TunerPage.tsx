@@ -1,41 +1,45 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet-async'
-import { AudioEngine, Tuner, PitchDetector, noteToFrequency } from '@kretoffer/guitar-audio-kit'
+import { AudioEngine, Tuner, PitchDetector, noteToFrequency, getTuning } from '@kretoffer/guitar-audio-kit'
 import type { TuningResult } from '@kretoffer/guitar-audio-kit'
+import { useAppStore } from '@/store/index.ts'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
 
-const GUITAR_STRINGS = [
-  { note: 'E', octave: 2, label: '6-я (E)' },
-  { note: 'A', octave: 2, label: '5-я (A)' },
-  { note: 'D', octave: 3, label: '4-я (D)' },
-  { note: 'G', octave: 3, label: '3-я (G)' },
-  { note: 'B', octave: 3, label: '2-я (B)' },
-  { note: 'E', octave: 4, label: '1-я (E)' },
-]
+function parseNote(name: string): { note: string; octave: number } {
+  const m = name.match(/^([A-G]#?)(\d+)$/)
+  if (!m) return { note: 'A', octave: 4 }
+  return { note: m[1], octave: parseInt(m[2]) }
+}
 
 function centsBetween(f1: number, f2: number): number {
   return 1200 * Math.log2(f1 / f2)
 }
 
-function findClosestString(freq: number): number | null {
-  let best = -1
-  let bestCents = Infinity
-  for (let i = 0; i < GUITAR_STRINGS.length; i++) {
-    const s = GUITAR_STRINGS[i]
-    const target = noteToFrequency(s.note, s.octave)
-    const c = Math.abs(centsBetween(freq, target))
-    if (c < bestCents) { bestCents = c; best = i }
-  }
-  return bestCents <= 100 ? best : null
+function buildStringLabels(notes: string[], lang: string): { note: string; octave: number; label: string }[] {
+  const total = notes.length
+  return notes.map((n, i) => {
+    const { note, octave } = parseNote(n)
+    let label = `${n}`
+    if (lang === 'ru') {
+      label = `${total - i}-я (${note.replace('#', '♯')})`
+    } else {
+      const pos = total - i
+      const suffix = pos === 1 ? 'st' : pos === 2 ? 'nd' : pos === 3 ? 'rd' : 'th'
+      label = `${pos}${suffix} (${n})`
+    }
+    return { note, octave, label }
+  })
 }
 
 export function TunerPage() {
   const { t, i18n } = useTranslation()
+  const instrumentName = useAppStore((s) => s.instrumentName)
+  const tuningName = useAppStore((s) => s.tuningName)
   const [active, setActive] = useState(false)
   const [autoDetect, setAutoDetect] = useState(true)
   const [result, setResult] = useState<TuningResult | null>(null)
-  const [selectedString, setSelectedString] = useState(4)
+  const [selectedString, setSelectedString] = useState(-1)
   const engineRef = useRef<AudioEngine | null>(null)
   const tunerRef = useRef<Tuner | null>(null)
   const pitchDetectorRef = useRef<PitchDetector | null>(null)
@@ -47,9 +51,31 @@ export function TunerPage() {
   const mountedRef = useRef(true)
   const { playTuned } = useAudioFeedback()
 
+  const tuningNotes = useMemo(() => getTuning(instrumentName, tuningName), [instrumentName, tuningName])
+  const strings = useMemo(() => buildStringLabels(tuningNotes, i18n.language), [tuningNotes, i18n.language])
+
+  const findClosestString = useMemo(() => {
+    return (freq: number): number | null => {
+      let best = -1
+      let bestCents = Infinity
+      for (let i = 0; i < tuningNotes.length; i++) {
+        const { note, octave } = parseNote(tuningNotes[i])
+        const target = noteToFrequency(note, octave)
+        const c = Math.abs(centsBetween(freq, target))
+        if (c < bestCents) { bestCents = c; best = i }
+      }
+      return bestCents <= 100 ? best : null
+    }
+  }, [tuningNotes])
+
   stringRef.current = selectedString
   activeRef.current = active
   autoDetectRef.current = autoDetect
+
+  // auto-select middle string when tuning changes
+  if (selectedString === -1 || selectedString >= strings.length) {
+    setSelectedString(Math.max(0, Math.floor(strings.length / 2)))
+  }
 
   useEffect(() => {
     mountedRef.current = true
@@ -69,6 +95,10 @@ export function TunerPage() {
 
           const tun = tunerRef.current
           if (!tun) return
+          const currentStrings = getTuning(
+            useAppStore.getState().instrumentName,
+            useAppStore.getState().tuningName
+          )
 
           if (autoDetectRef.current) {
             const rawFreq = pitchDetectorRef.current?.detect(60, 1500)
@@ -81,8 +111,11 @@ export function TunerPage() {
             }
           }
 
-          const s = GUITAR_STRINGS[stringRef.current]
-          tun.setTarget(s.note, s.octave)
+          const idx = stringRef.current
+          if (idx >= 0 && idx < currentStrings.length) {
+            const { note, octave } = parseNote(currentStrings[idx])
+            tun.setTarget(note, octave)
+          }
           const r = tun.detect()
           setResult(r)
           if (r?.isInTune && !lastTunedRef.current) playTuned()
@@ -100,7 +133,7 @@ export function TunerPage() {
       cancelAnimationFrame(rafRef.current)
       engineRef.current?.destroy()
     }
-  }, [active, playTuned])
+  }, [active, playTuned, findClosestString])
 
   const cents = result?.cents ?? 0
   const isInTune = result?.isInTune ?? false
@@ -121,15 +154,12 @@ export function TunerPage() {
       <h1 className="text-2xl font-bold">{t('tuner.title')}</h1>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        {GUITAR_STRINGS.map((s, i) => (
+        {strings.map((s, i) => (
           <button key={i} onClick={() => { setSelectedString(i); setAutoDetect(false) }}
             className={`rounded-lg px-3 py-1 text-sm ${selectedString === i ? 'bg-blue-500 text-white' : ''}`}
             style={{ backgroundColor: selectedString === i ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
           >
-            {i18n.language === 'en'
-              ? `${s.note}${s.octave} (${s.note === 'B' ? '2nd' : ['6th','5th','4th','3rd','2nd','1st'][i]})`
-              : s.label
-            }
+            {s.label}
           </button>
         ))}
       </div>
@@ -165,11 +195,9 @@ export function TunerPage() {
                   style={{ width: `${barW}%`, marginLeft: cents > 0 ? '50%' : `${50 - barW}%` }}
                 />
               </div>
-              {autoDetect && (
+              {autoDetect && selectedString >= 0 && selectedString < strings.length && (
                 <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {t('tuner.detected')} {i18n.language === 'en'
-                    ? `${GUITAR_STRINGS[selectedString].note}${GUITAR_STRINGS[selectedString].octave}`
-                    : GUITAR_STRINGS[selectedString].label}
+                  {t('tuner.detected')} {strings[selectedString].label}
                 </div>
               )}
             </>

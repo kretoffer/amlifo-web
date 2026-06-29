@@ -49,6 +49,14 @@
     "playAgain": "Play Again",
     "highScore": "Best:"
   },
+  "instrument": {
+    "select": "Select Instrument",
+    "done": "Done",
+    "strings": "strings",
+    "instruments": "instruments",
+    "default": "default",
+    "trainingWarning": "Training currently supports 6-string instruments only. Switch to a 6-string guitar in the instrument selector."
+  },
   "theme": {
     "light": "Light",
     "dark": "Dark"
