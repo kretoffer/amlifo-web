@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useScreenWakeLock } from '@/hooks/useScreenWakeLock.ts'
 import { Outlet } from 'react-router-dom'
 import { NavBar } from './NavBar.tsx'
 import { InstrumentSelector } from './InstrumentSelector.tsx'
@@ -12,6 +13,7 @@ export function Layout() {
   const instrumentName = useAppStore((s) => s.instrumentName)
   const { i18n } = useTranslation()
   const [selectorOpen, setSelectorOpen] = useState(false)
+  useScreenWakeLock()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
