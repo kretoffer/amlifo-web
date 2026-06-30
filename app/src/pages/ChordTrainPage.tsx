@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet-async'
 import { ChordDiagram } from '@/components/ChordDiagram.tsx'
-import { CHORD_LIBRARY } from '@/data/chords.ts'
+import { getInstrumentChords } from '@/data/chords.ts'
 import { useAppStore } from '@/store/index.ts'
-import { AudioEngine, StringAnalyzer, getTuning, getInstrument } from '@kretoffer/guitar-audio-kit'
+import { AudioEngine, StringAnalyzer, getTuning } from '@kretoffer/guitar-audio-kit'
 import { useAudioFeedback, warmUpAudio } from '@/hooks/useAudioFeedback.ts'
 
 export function ChordTrainPage() {
@@ -39,8 +39,10 @@ export function ChordTrainPage() {
   const { playCorrectChord } = useAudioFeedback()
 
   function nextChord(): string | null {
-    if (selectedChords.length === 0) return null
-    return selectedChords[Math.floor(Math.random() * selectedChords.length)]
+    const chords = getInstrumentChords(instrumentName, useAppStore.getState().tuningName)
+    const valid = selectedChords.filter((c) => c in chords)
+    if (valid.length === 0) return null
+    return valid[Math.floor(Math.random() * valid.length)]
   }
 
   const stopTraining = useCallback(() => {
@@ -88,7 +90,8 @@ export function ChordTrainPage() {
         setCurrentChord(name)
         setChordKey(k => k + 1)
         chordName.current = name
-        analyzer.setTarget(CHORD_LIBRARY[name].frets)
+        const chordShape = getInstrumentChords(instrumentName, tuningName)[name]
+        if (chordShape) analyzer.setTarget(chordShape.frets)
 
         function loop() {
           if (!mounted.current || !analyzerRef.current) return
@@ -102,7 +105,7 @@ export function ChordTrainPage() {
             return
           }
 
-          const chord = CHORD_LIBRARY[chordName.current!]
+          const chord = getInstrumentChords(instrumentName, tuningName)[chordName.current!]
           if (!chord) return
 
           if (result.confidence >= 0.75) {
@@ -133,7 +136,8 @@ export function ChordTrainPage() {
               setFeedback(null)
               correctCount.current = 0
               onCooldown.current = false
-              analyzerRef.current?.setTarget(CHORD_LIBRARY[next].frets)
+              const nextShape = getInstrumentChords(instrumentName, tuningName)[next]
+              if (nextShape) analyzerRef.current?.setTarget(nextShape.frets)
             }, 1200)
           }
         }
@@ -173,10 +177,9 @@ export function ChordTrainPage() {
     return () => clearTimeout(t)
   }, [isPlaying, timeLeft, mode, setStringStates, setHighScore])
 
-  const isSixString = useMemo(
-    () => getInstrument(instrumentName).stringCount === 6,
-    [instrumentName]
-  )
+  const tuningName = useAppStore(s => s.tuningName)
+  const chordLib = useMemo(() => getInstrumentChords(instrumentName, tuningName), [instrumentName, tuningName])
+  const hasChords = Object.keys(chordLib).length > 0
 
   if (screen === 'setup') {
     return (
@@ -192,9 +195,9 @@ export function ChordTrainPage() {
 
         <h1 className="text-2xl font-bold text-center">{t('train.title')}</h1>
 
-        {!isSixString && (
+        {!hasChords && (
           <div className="rounded-lg px-4 py-3 text-sm text-yellow-700 bg-yellow-100 dark:text-yellow-300 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
-            {t('instrument.trainingWarning')}
+            {t('instrument.noChordsWarning')}
           </div>
         )}
 
@@ -215,7 +218,7 @@ export function ChordTrainPage() {
           <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
             <h3 className="text-sm font-semibold mb-2">{t('train.selectChords')}</h3>
             <div className="flex flex-wrap justify-center gap-2">
-              {Object.keys(CHORD_LIBRARY).map(k => (
+              {Object.keys(chordLib).map(k => (
                 <button key={k} onClick={() => toggleChord(k)}
                   className={`rounded-lg px-3 py-1 text-sm ${selectedChords.includes(k) ? 'bg-blue-500 text-white' : ''}`}
                   style={{ backgroundColor: selectedChords.includes(k) ? undefined : 'var(--color-bg)', border: '1px solid var(--color-border)' }}
@@ -223,7 +226,7 @@ export function ChordTrainPage() {
               ))}
             </div>
           </div>
-          <button onClick={async () => { await warmUpAudio(); startTraining() }} disabled={selectedChords.length === 0 || !isSixString}
+          <button onClick={async () => { await warmUpAudio(); startTraining() }} disabled={selectedChords.length === 0 || !hasChords}
             className="rounded-full bg-green-500 px-8 py-3 text-lg font-bold text-white disabled:opacity-50"
           >{t('train.start')}</button>
         </div>

@@ -57,7 +57,8 @@
     "strings": "strings",
     "instruments": "instruments",
     "default": "default",
-    "trainingWarning": "Training currently supports 6-string instruments only. Switch to a 6-string guitar in the instrument selector."
+    "trainingWarning": "Training currently supports 6-string instruments only. Switch to a 6-string guitar in the instrument selector.",
+    "noChordsWarning": "No chord shapes are defined for this instrument. Select another instrument in the menu."
   },
   "theme": {
     "light": "Light",

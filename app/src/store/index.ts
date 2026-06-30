@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { StringState, InstrumentName } from '@kretoffer/guitar-audio-kit'
-import { CHORD_KEYS } from '@/data/chords.ts'
+import { getInstrumentChords } from '@/data/chords.ts'
 
 interface AppState {
   theme: 'light' | 'dark'
@@ -28,7 +28,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       theme: 'dark',
       toggleTheme: () =>
         set((s) => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
@@ -42,8 +42,11 @@ export const useAppStore = create<AppState>()(
             ? s.selectedChords.filter((c) => c !== chord)
             : [...s.selectedChords, chord],
         })),
-      selectAllChords: () =>
-        set({ selectedChords: [...CHORD_KEYS] }),
+      selectAllChords: () => {
+        const { instrumentName, tuningName } = get()
+        const chords = getInstrumentChords(instrumentName, tuningName)
+        set({ selectedChords: Object.keys(chords) })
+      },
       clearChords: () => set({ selectedChords: [] }),
       score: 0,
       totalRounds: 0,
@@ -62,7 +65,16 @@ export const useAppStore = create<AppState>()(
       instrumentName: 'guitar' as InstrumentName,
       tuningName: 'standard',
       setInstrument: (name, tuning) =>
-        set({ instrumentName: name, tuningName: tuning ?? 'standard' }),
+        set((s) => {
+          const newTuning = tuning ?? 'standard'
+          const chords = getInstrumentChords(name, newTuning)
+          const filtered = s.selectedChords.filter((c) => c in chords)
+          return {
+            instrumentName: name,
+            tuningName: newTuning,
+            selectedChords: filtered.length > 0 ? filtered : [Object.keys(chords)[0]].filter(Boolean),
+          }
+        }),
     }),
     { name: 'guitar-trainer-storage' }
   )
