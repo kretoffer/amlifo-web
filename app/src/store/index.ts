@@ -16,9 +16,11 @@ interface AppState {
   totalRounds: number
   highScoreDiagram: number
   highScoreName: number
+  highScoreSpeed: number
   incrementScore: () => void
   resetScore: () => void
   setHighScore: (score: number, mode: 'diagram' | 'name') => void
+  setSpeedHighScore: (cycles: number) => void
   stringStates: StringState[]
   setStringStates: (states: StringState[]) => void
   instrumentName: InstrumentName
@@ -52,6 +54,7 @@ export const useAppStore = create<AppState>()(
       totalRounds: 0,
       highScoreDiagram: 0,
       highScoreName: 0,
+      highScoreSpeed: 0,
       incrementScore: () =>
         set((s) => ({ score: s.score + 1, totalRounds: s.totalRounds + 1 })),
       resetScore: () => set({ score: 0, totalRounds: 0 }),
@@ -60,6 +63,8 @@ export const useAppStore = create<AppState>()(
           highScoreDiagram: mode === 'diagram' ? Math.max(score, s.highScoreDiagram) : s.highScoreDiagram,
           highScoreName: mode === 'name' ? Math.max(score, s.highScoreName) : s.highScoreName,
         })),
+      setSpeedHighScore: (cycles) =>
+        set((s) => ({ highScoreSpeed: Math.max(cycles, s.highScoreSpeed) })),
       stringStates: [],
       setStringStates: (states) => set({ stringStates: states }),
       instrumentName: 'guitar' as InstrumentName,

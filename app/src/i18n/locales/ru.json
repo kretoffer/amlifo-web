@@ -51,6 +51,28 @@
     "playAgain": "Сыграть ещё",
     "highScore": "Рекорд:"
   },
+  "speedTrain": {
+    "title": "Тренировка на скорость",
+    "byDiagram": "По диаграмме",
+    "byName": "По названию",
+    "buildQueue": "Собери очередь:",
+    "addChord": "+ Добавить аккорд",
+    "maxTempo": "Макс. темп (BPM):",
+    "start": "Старт",
+    "speed": "Скорость:",
+    "cycle": "Цикл",
+    "missed": "Промах!",
+    "correct": "✓ Правильно!",
+    "playChord": "Сыграй аккорд",
+    "complete": "Тренировка пройдена!",
+    "stopped": "Остановлено",
+    "playAgain": "Заново",
+    "settings": "Настройки",
+    "highScore": "Рекорд:",
+    "needAtLeastTwo": "Нужно минимум 2 аккорда",
+    "atFullSpeed": "Циклов на 100%:",
+    "bestSpeed": "Макс. скорость:"
+  },
   "instrument": {
     "select": "Выбор инструмента",
     "done": "Готово",

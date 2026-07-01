@@ -202,15 +202,17 @@ export function ChordTrainPage() {
         )}
 
         <div className="space-y-4 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <button onClick={() => setMode('diagram')}
-              className={`rounded-lg px-4 py-2 ${mode === 'diagram' ? 'bg-blue-500 text-white' : ''}`}
-              style={{ backgroundColor: mode === 'diagram' ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-            >{t('train.byDiagram')}</button>
-            <button onClick={() => setMode('name')}
-              className={`rounded-lg px-4 py-2 ${mode === 'name' ? 'bg-blue-500 text-white' : ''}`}
-              style={{ backgroundColor: mode === 'name' ? undefined : 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-            >{t('train.byName')}</button>
+          <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setMode('diagram')}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${mode === 'diagram' ? 'bg-blue-500 text-white' : ''}`}
+                style={{ backgroundColor: mode === 'diagram' ? undefined : 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+              >{t('train.byDiagram')}</button>
+              <button onClick={() => setMode('name')}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${mode === 'name' ? 'bg-blue-500 text-white' : ''}`}
+                style={{ backgroundColor: mode === 'name' ? undefined : 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+              >{t('train.byName')}</button>
+            </div>
           </div>
           <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
             {t('train.highScore')} {t('train.byDiagram')}: {highScoreDiagram} &middot; {t('train.byName')}: {highScoreName}

@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout.tsx'
 import { HomePage } from '@/pages/Home.tsx'
 import { MetronomePage } from '@/pages/MetronomePage.tsx'
 import { TunerPage } from '@/pages/TunerPage.tsx'
-import { ChordTrainPage } from '@/pages/ChordTrainPage.tsx'
+import { TrainPage } from '@/pages/TrainPage.tsx'
 
 export default function App() {
   return (
@@ -12,7 +12,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/metronome" element={<MetronomePage />} />
         <Route path="/tuner" element={<TunerPage />} />
-        <Route path="/train" element={<ChordTrainPage />} />
+        <Route path="/train" element={<TrainPage />} />
       </Route>
     </Routes>
   )

@@ -51,6 +51,28 @@
     "playAgain": "Play Again",
     "highScore": "Best:"
   },
+  "speedTrain": {
+    "title": "Speed Training",
+    "byDiagram": "By diagram",
+    "byName": "By name",
+    "buildQueue": "Build sequence:",
+    "addChord": "+ Add chord",
+    "maxTempo": "Max tempo (BPM):",
+    "start": "Start",
+    "speed": "Speed:",
+    "cycle": "Cycle",
+    "missed": "Missed!",
+    "correct": "✓ Correct!",
+    "playChord": "Play the chord",
+    "complete": "Training Complete!",
+    "stopped": "Stopped",
+    "playAgain": "Play Again",
+    "settings": "Settings",
+    "highScore": "Best:",
+    "needAtLeastTwo": "Need at least 2 chords",
+    "atFullSpeed": "Cycles at 100%:",
+    "bestSpeed": "Best speed:"
+  },
   "instrument": {
     "select": "Select Instrument",
     "done": "Done",
